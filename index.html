@@ -1111,18 +1111,17 @@ const DEFAULT_DATA = {
     { id: 20, date: '2026-04-17', time: '—', desc: 'Roaya Almustaqbal', amount: 8, type: 'expense', cat: 'Other', paid: 'Business Card', notes: '' },
     { id: 21, date: '2026-04-17', time: '—', desc: 'Lulu Hypermarket', amount: 47.4, type: 'expense', cat: 'Groceries', paid: 'Business Card', notes: '' },
     { id: 22, date: '2026-04-17', time: '—', desc: 'Lulu Hypermarket', amount: 735.45, type: 'expense', cat: 'Groceries', paid: 'Business Card', notes: '' },
-    { id: 23, date: '2026-04-17', time: '12:05', desc: 'Lulu Hypermarket', amount: 158.25, type: 'expense', cat: 'Groceries', paid: 'Teymur M', notes: '' },
-    { id: 24, date: '2026-04-18', time: '12:18', desc: 'Lulu Hypermarket (groceries receipt)', amount: 121.15, type: 'expense', cat: 'Groceries', paid: 'Ziya M', notes: '' },
-    { id: 25, date: '2026-04-18', time: '—', desc: 'Hotpack Packaging LLC (receipt)', amount: 62.4, type: 'expense', cat: 'Packaging', paid: 'Kamil M', notes: '' },
-    { id: 26, date: '2026-04-18', time: '22:23', desc: 'ADCB Merchant – Vehicle Testing', amount: 157.5, type: 'expense', cat: 'Transport', paid: 'Kamil M', notes: '' },
-    { id: 27, date: '2026-04-19', time: '10:47', desc: 'Lulu Hypermarket (groceries receipt)', amount: 202, type: 'expense', cat: 'Groceries', paid: '', notes: '' },
-    { id: 28, date: '2026-04-18', time: '—', desc: 'Network purchase (packet)', amount: 25, type: 'expense', cat: 'Other', paid: 'Ziya M', notes: '' },
+    { id: 23, date: '2026-04-18', time: '12:18', desc: 'Lulu Hypermarket (groceries receipt)', amount: 121.15, type: 'expense', cat: 'Groceries', paid: 'Ziya M', notes: '' },
+    { id: 24, date: '2026-04-18', time: '—', desc: 'Hotpack Packaging LLC (receipt)', amount: 62.4, type: 'expense', cat: 'Packaging', paid: 'Kamil M', notes: '' },
+    { id: 25, date: '2026-04-18', time: '22:23', desc: 'ADCB Merchant – Vehicle Testing', amount: 157.5, type: 'expense', cat: 'Transport', paid: 'Kamil M', notes: '' },
+    { id: 26, date: '2026-04-19', time: '10:47', desc: 'Lulu Hypermarket (groceries receipt)', amount: 202, type: 'expense', cat: 'Groceries', paid: '', notes: '' },
+    { id: 27, date: '2026-04-18', time: '—', desc: 'Network purchase (packet)', amount: 25, type: 'expense', cat: 'Other', paid: 'Ziya M', notes: '' },
   ],
   kitchen: [],
   stock: [],
   receipts: [],
   nextOrderId: 66,
-  nextTxId: 29,
+  nextTxId: 28,
   nextKitchenId: 1,
   nextStockId: 1,
   nextReceiptId: 1,
@@ -1179,16 +1178,17 @@ function renderDashboard() {
   const totalGross = orders.reduce((s, o) => s + o.amount, 0);
   const totalNet = orders.reduce((s, o) => s + netEarned(o), 0);
   const totalExpenses = DATA.transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-  const totalIncome = DATA.transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-  const pnl = totalNet + totalIncome - totalExpenses;
+  const totalCapital = DATA.transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  // P&L = net delivery earnings - expenses (capital invested is NOT revenue)
+  const pnl = totalNet - totalExpenses;
 
   const stats = [
     { label: 'Total Orders', value: orders.length, sub: 'All apps', cls: 'blue' },
     { label: 'Gross Sales', value: 'AED ' + totalGross.toFixed(0), sub: 'Before commission', cls: 'gold' },
-    { label: 'Net Earnings', value: 'AED ' + totalNet.toFixed(0), sub: 'After app fees', cls: 'green' },
-    { label: 'Total Expenses', value: 'AED ' + totalExpenses.toFixed(0), sub: 'All categories', cls: 'red' },
-    { label: 'P&L (April)', value: (pnl >= 0 ? '+' : '') + 'AED ' + pnl.toFixed(0), sub: 'Net + Transfers - Expenses', cls: pnl >= 0 ? 'green' : 'red' },
-    { label: 'Low Stock Items', value: DATA.stock.filter(s => s.qty <= s.min).length, sub: 'Need restocking', cls: 'red' },
+    { label: 'Net Delivery Revenue', value: 'AED ' + totalNet.toFixed(2), sub: 'After app fees & tax', cls: 'green' },
+    { label: 'Total Expenses', value: 'AED ' + totalExpenses.toFixed(2), sub: 'All categories', cls: 'red' },
+    { label: 'P&L (April)', value: (pnl >= 0 ? '+' : '') + 'AED ' + pnl.toFixed(2), sub: 'Net revenue - expenses', cls: pnl >= 0 ? 'green' : 'red' },
+    { label: 'Capital Invested', value: 'AED ' + totalCapital.toFixed(0), sub: 'Transfers in (not profit)', cls: 'blue' },
   ];
 
   document.getElementById('dashboard-stats').innerHTML = stats.map(s => `
@@ -1517,9 +1517,9 @@ function renderTransactions() {
   const totalOut = txs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
 
   document.getElementById('tx-stats').innerHTML = `
-    <div class="stat-card green"><div class="label">Total Income</div><div class="value">AED ${totalIn.toFixed(0)}</div></div>
-    <div class="stat-card red"><div class="label">Total Expenses</div><div class="value">AED ${totalOut.toFixed(0)}</div></div>
-    <div class="stat-card ${totalIn - totalOut >= 0 ? 'green' : 'red'}"><div class="label">Net (shown)</div><div class="value">${totalIn - totalOut >= 0 ? '+' : ''}AED ${(totalIn - totalOut).toFixed(0)}</div></div>
+    <div class="stat-card blue"><div class="label">Capital Invested</div><div class="value">AED ${totalIn.toFixed(0)}</div><div class="sub">Transfers in — not profit</div></div>
+    <div class="stat-card red"><div class="label">Total Expenses</div><div class="value">AED ${totalOut.toFixed(2)}</div></div>
+    <div class="stat-card ${totalOut - totalIn >= 0 ? 'red' : 'green'}"><div class="label">Capital vs Spend</div><div class="value">${totalIn - totalOut >= 0 ? '+' : ''}AED ${(totalIn - totalOut).toFixed(0)}</div><div class="sub">Invested minus spent</div></div>
   `;
 
   document.getElementById('tx-table-body').innerHTML = txs.map(t => `
@@ -1644,14 +1644,15 @@ function renderPnL() {
   const orders = DATA.orders.filter(o => o.amount > 0);
   const totalNet = orders.reduce((s, o) => s + netEarned(o), 0);
   const expenses = DATA.transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-  const transfers = DATA.transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-  const pnl = totalNet + transfers - expenses;
+  const capital = DATA.transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  // True P&L = net delivery revenue - expenses (capital invested is separate)
+  const pnl = totalNet - expenses;
 
   document.getElementById('pnl-stats').innerHTML = [
-    { label: 'Delivery Revenue (Net)', value: 'AED ' + totalNet.toFixed(2), cls: 'green' },
-    { label: 'Total Expenses', value: 'AED ' + expenses.toFixed(2), cls: 'red' },
-    { label: 'Capital Invested', value: 'AED ' + transfers.toFixed(2), cls: 'blue' },
-    { label: 'Final P&L', value: (pnl >= 0 ? '+' : '') + 'AED ' + pnl.toFixed(2), cls: pnl >= 0 ? 'green' : 'red', note: 'incl. all profits from delivery apps' },
+    { label: 'Net Delivery Revenue', value: 'AED ' + totalNet.toFixed(2), cls: 'green', note: 'After all app commissions & tax' },
+    { label: 'Total Expenses', value: 'AED ' + expenses.toFixed(2), cls: 'red', note: 'All business spending' },
+    { label: 'Capital Invested', value: 'AED ' + capital.toFixed(2), cls: 'blue', note: 'Transfers in — not counted as profit' },
+    { label: 'Final P&L', value: (pnl >= 0 ? '+' : '') + 'AED ' + pnl.toFixed(2), cls: pnl >= 0 ? 'green' : 'red', note: 'Net revenue − expenses' },
   ].map(s => `
     <div class="stat-card ${s.cls}">
       <div class="label">${s.label}</div>
