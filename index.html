@@ -1,0 +1,1845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taste of Baku — Business Manager</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0d0e0f;
+    --bg2: #141516;
+    --bg3: #1c1d1e;
+    --border: #2a2b2c;
+    --accent: #c9a84c;
+    --accent2: #e8c97a;
+    --red: #e05252;
+    --green: #52c484;
+    --blue: #5290e0;
+    --text: #e8e6e1;
+    --muted: #7a7875;
+    --white: #ffffff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 220px;
+    min-height: 100vh;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    position: fixed;
+    top: 0; left: 0;
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+  }
+
+  .logo {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    color: var(--accent);
+    line-height: 1.3;
+  }
+  .logo span { font-size: 11px; color: var(--muted); font-weight: 300; display: block; margin-top: 2px; }
+
+  .nav { padding: 12px 0; flex: 1; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--muted);
+    border-left: 3px solid transparent;
+    transition: all 0.15s;
+  }
+  .nav-item:hover { color: var(--text); background: var(--bg3); }
+  .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(201,168,76,0.06); }
+  .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+
+  .nav-section {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    padding: 16px 20px 6px;
+    text-transform: uppercase;
+  }
+
+  /* MAIN */
+  .main {
+    margin-left: 220px;
+    flex: 1;
+    padding: 28px 32px;
+    min-height: 100vh;
+  }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .page-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 24px;
+  }
+  .page-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    color: var(--white);
+  }
+  .page-header p { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+  /* STAT CARDS */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .stat-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+  }
+  .stat-card .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .stat-card .value { font-size: 24px; font-weight: 600; margin-top: 6px; }
+  .stat-card .sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .stat-card.green .value { color: var(--green); }
+  .stat-card.red .value { color: var(--red); }
+  .stat-card.gold .value { color: var(--accent); }
+  .stat-card.blue .value { color: var(--blue); }
+
+  /* TABLE */
+  .table-wrap {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .table-toolbar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .table-toolbar h3 { font-size: 14px; font-weight: 600; flex: 1; }
+
+  .btn {
+    padding: 7px 14px;
+    border-radius: 7px;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    transition: all 0.15s;
+  }
+  .btn-primary { background: var(--accent); color: #000; }
+  .btn-primary:hover { background: var(--accent2); }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn-ghost:hover { color: var(--text); border-color: var(--text); }
+  .btn-danger { background: rgba(224,82,82,0.15); color: var(--red); border: 1px solid rgba(224,82,82,0.3); }
+  .btn-danger:hover { background: rgba(224,82,82,0.25); }
+
+  input[type="text"], input[type="number"], input[type="date"], select, textarea {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 12px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  input[type="text"] { width: 200px; }
+
+  .search-input { width: 220px !important; }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    padding: 10px 14px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+  td {
+    padding: 10px 14px;
+    font-size: 13px;
+    vertical-align: middle;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .badge-talabat { background: rgba(255,130,0,0.15); color: #ff8200; }
+  .badge-deliveroo { background: rgba(0,204,136,0.15); color: #00cc88; }
+  .badge-careem { background: rgba(30,150,30,0.15); color: #32cd32; }
+  .badge-keeta { background: rgba(82,144,224,0.15); color: var(--blue); }
+  .badge-whatsapp { background: rgba(37,211,102,0.15); color: #25d366; }
+  .badge-noon { background: rgba(255,230,0,0.15); color: #ffe600; }
+  .badge-tob { background: rgba(201,168,76,0.15); color: var(--accent); }
+  .badge-q { background: rgba(180,100,200,0.15); color: #c864c8; }
+  .badge-income { background: rgba(82,196,132,0.1); color: var(--green); }
+  .badge-expense { background: rgba(224,82,82,0.1); color: var(--red); }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+    width: 520px;
+    max-width: 90vw;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+  .modal h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    margin-bottom: 20px;
+    color: var(--white);
+  }
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  .form-grid.single { grid-template-columns: 1fr; }
+  .form-group label {
+    display: block;
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 5px;
+  }
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+  }
+  .form-group textarea { height: 70px; resize: vertical; }
+  .form-span-2 { grid-column: span 2; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px; }
+
+  /* PHOTO UPLOAD */
+  .photo-upload {
+    border: 2px dashed var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .photo-upload:hover { border-color: var(--accent); background: rgba(201,168,76,0.04); }
+  .photo-upload p { font-size: 13px; color: var(--muted); }
+  .photo-upload input[type="file"] { display: none; }
+
+  .photo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .photo-item {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .photo-item img { width: 100%; height: 100%; object-fit: cover; }
+  .photo-item .del-photo {
+    position: absolute; top: 4px; right: 4px;
+    background: rgba(0,0,0,0.7);
+    border: none; border-radius: 50%;
+    width: 22px; height: 22px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--red);
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* FILTER BAR */
+  .filter-bar {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .filter-btn {
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .filter-btn:hover { color: var(--text); border-color: var(--text); }
+  .filter-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
+
+  /* PROFIT/LOSS INDICATORS */
+  .profit { color: var(--green); }
+  .loss { color: var(--red); }
+
+  /* STOCK PROGRESS */
+  .stock-bar {
+    width: 100%;
+    height: 6px;
+    background: var(--bg3);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+  .stock-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s;
+  }
+
+  .stock-item {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .stock-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .stock-item .item-name { font-size: 13px; font-weight: 500; }
+  .stock-item .item-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .stock-item .item-count { font-size: 22px; font-weight: 600; color: var(--accent); margin: 8px 0 4px; }
+
+  /* PHOTO IN STOCK */
+  .stock-photo {
+    width: 100%;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    margin-bottom: 10px;
+    background: var(--bg3);
+  }
+  .no-photo {
+    width: 100%;
+    aspect-ratio: 16/9;
+    border-radius: 6px;
+    border: 1px dashed var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: var(--border);
+    margin-bottom: 10px;
+    cursor: pointer;
+  }
+  .no-photo:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* SUMMARY ROWS */
+  .summary-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-row .key { color: var(--muted); }
+
+  /* DELIVERY % SETTINGS */
+  .delivery-settings {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+  .delivery-settings h4 { font-size: 14px; margin-bottom: 14px; color: var(--accent); }
+  .delivery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+  }
+  .delivery-item label { font-size: 11px; color: var(--muted); display: block; margin-bottom: 4px; }
+  .delivery-item input { width: 100%; }
+
+  .toast {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 18px;
+    font-size: 13px;
+    z-index: 300;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+  .dot-green { background: var(--green); }
+  .dot-red { background: var(--red); }
+  .dot-gold { background: var(--accent); }
+
+  .actions-cell { display: flex; gap: 6px; }
+  .icon-btn {
+    width: 28px; height: 28px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+    font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+  .icon-btn:hover { color: var(--text); border-color: var(--text); }
+  .icon-btn.red:hover { color: var(--red); border-color: var(--red); }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .empty-state .icon { font-size: 36px; margin-bottom: 10px; }
+
+  .overflow-x { overflow-x: auto; }
+
+  @media (max-width: 768px) {
+    .sidebar { width: 60px; }
+    .sidebar .logo h1, .sidebar .logo span, .nav-item span, .nav-section { display: none; }
+    .main { margin-left: 60px; padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="logo">
+    <h1>Taste of Baku</h1>
+    <span>Business Manager</span>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">Overview</div>
+    <div class="nav-item active" onclick="showPage('dashboard')">
+      <span class="icon">📊</span><span>Dashboard</span>
+    </div>
+
+    <div class="nav-section">Operations</div>
+    <div class="nav-item" onclick="showPage('orders')">
+      <span class="icon">🧾</span><span>Orders</span>
+    </div>
+    <div class="nav-item" onclick="showPage('kitchen')">
+      <span class="icon">🍳</span><span>Kitchen Needs</span>
+    </div>
+    <div class="nav-item" onclick="showPage('stock')">
+      <span class="icon">📦</span><span>Stock</span>
+    </div>
+
+    <div class="nav-section">Finance</div>
+    <div class="nav-item" onclick="showPage('transactions')">
+      <span class="icon">💳</span><span>Bank & Expenses</span>
+    </div>
+    <div class="nav-item" onclick="showPage('receipts')">
+      <span class="icon">🗂️</span><span>Receipts</span>
+    </div>
+    <div class="nav-item" onclick="showPage('pnl')">
+      <span class="icon">📈</span><span>Profit & Loss</span>
+    </div>
+
+    <div class="nav-section">Config</div>
+    <div class="nav-item" onclick="showPage('settings')">
+      <span class="icon">⚙️</span><span>Delivery %</span>
+    </div>
+  </nav>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div class="page-header">
+      <div>
+        <h2>Dashboard</h2>
+        <p>Taste of Baku — From 13th April 2026</p>
+      </div>
+    </div>
+    <div class="stats-grid" id="dashboard-stats"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div class="table-wrap">
+        <div class="table-toolbar"><h3>App Performance</h3></div>
+        <div id="app-performance-table"></div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-toolbar"><h3>Recent Orders</h3></div>
+        <div id="recent-orders-preview"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ORDERS -->
+  <div class="page" id="page-orders">
+    <div class="page-header">
+      <div><h2>Orders</h2><p>All delivery orders — ToB & Qutab</p></div>
+      <button class="btn btn-primary" onclick="openModal('order-modal')">+ Add Order</button>
+    </div>
+    <div class="table-wrap">
+      <div class="filter-bar" id="order-filter-bar"></div>
+      <div class="table-toolbar">
+        <h3 id="orders-count">Orders</h3>
+        <input type="text" class="search-input" placeholder="Search orders..." oninput="filterOrders(this.value)">
+      </div>
+      <div class="overflow-x">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>App</th>
+              <th>Restaurant</th>
+              <th>Order</th>
+              <th>Gross (AED)</th>
+              <th>Net Earned</th>
+              <th>Order ID</th>
+              <th>Notes</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="orders-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- KITCHEN NEEDS -->
+  <div class="page" id="page-kitchen">
+    <div class="page-header">
+      <div><h2>Kitchen Needs</h2><p>What to buy — Lazimli eşyalar mətbəx üçün</p></div>
+      <button class="btn btn-primary" onclick="openModal('kitchen-modal')">+ Add Item</button>
+    </div>
+    <div class="table-wrap">
+      <div class="filter-bar">
+        <button class="filter-btn active" onclick="filterKitchen('all', this)">All</button>
+        <button class="filter-btn" onclick="filterKitchen('pending', this)">🔴 Need to Buy</button>
+        <button class="filter-btn" onclick="filterKitchen('bought', this)">✅ Bought</button>
+      </div>
+      <div class="overflow-x">
+        <table>
+          <thead>
+            <tr>
+              <th>Item (Əşyanın adı)</th>
+              <th>Qty (Ədəd)</th>
+              <th>When Needed</th>
+              <th>How Much</th>
+              <th>Status</th>
+              <th>Photos</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="kitchen-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- STOCK -->
+  <div class="page" id="page-stock">
+    <div class="page-header">
+      <div><h2>Kitchen Stock</h2><p>Mətbəx stoku — what we have / what we need</p></div>
+      <button class="btn btn-primary" onclick="openModal('stock-modal')">+ Add Item</button>
+    </div>
+    <div class="filter-bar" style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:16px;">
+      <button class="filter-btn active" onclick="filterStock('all', this)">All</button>
+      <button class="filter-btn" onclick="filterStock('low', this)">⚠️ Low Stock</button>
+      <button class="filter-btn" onclick="filterStock('ok', this)">✅ In Stock</button>
+    </div>
+    <div class="stock-grid" id="stock-grid"></div>
+  </div>
+
+  <!-- TRANSACTIONS -->
+  <div class="page" id="page-transactions">
+    <div class="page-header">
+      <div><h2>Bank & Expenses</h2><p>Business card transactions</p></div>
+      <button class="btn btn-primary" onclick="openModal('tx-modal')">+ Add Transaction</button>
+    </div>
+    <div class="stats-grid" id="tx-stats"></div>
+    <div class="table-wrap">
+      <div class="filter-bar">
+        <button class="filter-btn active" onclick="filterTx('all', this)">All</button>
+        <button class="filter-btn" onclick="filterTx('income', this)">💚 Income</button>
+        <button class="filter-btn" onclick="filterTx('expense', this)">🔴 Expense</button>
+      </div>
+      <div class="overflow-x">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Description</th>
+              <th>Amount (AED)</th>
+              <th>Type</th>
+              <th>Paid By</th>
+              <th>Receipt</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tx-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECEIPTS -->
+  <div class="page" id="page-receipts">
+    <div class="page-header">
+      <div><h2>Receipts</h2><p>Upload & manage all receipts</p></div>
+      <button class="btn btn-primary" onclick="openModal('receipt-modal')">+ Add Receipt</button>
+    </div>
+    <div class="table-wrap">
+      <div class="overflow-x">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Vendor</th>
+              <th>Amount (AED)</th>
+              <th>Category</th>
+              <th>Photos</th>
+              <th>Notes</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="receipts-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- P&L -->
+  <div class="page" id="page-pnl">
+    <div class="page-header">
+      <div><h2>Profit & Loss</h2><p>Full financial summary</p></div>
+    </div>
+    <div class="stats-grid" id="pnl-stats"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
+      <div class="table-wrap">
+        <div class="table-toolbar"><h3>Revenue by App</h3></div>
+        <div id="pnl-revenue-table"></div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-toolbar"><h3>Expense Breakdown</h3></div>
+        <div id="pnl-expense-table"></div>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <div class="table-toolbar"><h3>P&L Timeline</h3></div>
+      <div id="pnl-daily-table"></div>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="page" id="page-settings">
+    <div class="page-header">
+      <div><h2>Delivery Percentages</h2><p>Set app commission rates — affects net earnings</p></div>
+    </div>
+    <div class="delivery-settings">
+      <h4>⚙️ App Commission Rates</h4>
+      <div class="delivery-grid">
+        <div class="delivery-item">
+          <label>Talabat (%)</label>
+          <input type="number" id="pct-talabat" value="32" min="0" max="100" onchange="saveSettings()">
+        </div>
+        <div class="delivery-item">
+          <label>Deliveroo (%)</label>
+          <input type="number" id="pct-deliveroo" value="30" min="0" max="100" onchange="saveSettings()">
+        </div>
+        <div class="delivery-item">
+          <label>Careem (%)</label>
+          <input type="number" id="pct-careem" value="25" min="0" max="100" onchange="saveSettings()">
+        </div>
+        <div class="delivery-item">
+          <label>Keeta (%)</label>
+          <input type="number" id="pct-keeta" value="30" min="0" max="100" onchange="saveSettings()">
+        </div>
+        <div class="delivery-item">
+          <label>Noon (%)</label>
+          <input type="number" id="pct-noon" value="25" min="0" max="100" onchange="saveSettings()">
+        </div>
+        <div class="delivery-item">
+          <label>WhatsApp (%)</label>
+          <input type="number" id="pct-whatsapp" value="0" min="0" max="100" onchange="saveSettings()">
+        </div>
+      </div>
+      <p style="margin-top:14px;font-size:12px;color:var(--muted);">Changes apply instantly to all earnings calculations across the app.</p>
+    </div>
+    <div class="delivery-settings">
+      <h4>🗑️ Data Management</h4>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Export all data or reset specific sections. Data is saved in your browser's localStorage.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-ghost" onclick="exportData()">📤 Export JSON</button>
+        <button class="btn btn-ghost" onclick="importData()">📥 Import JSON</button>
+        <input type="file" id="import-file" accept=".json" style="display:none" onchange="handleImport(event)">
+      </div>
+    </div>
+  </div>
+
+</div><!-- end main -->
+
+<!-- MODALS -->
+
+<!-- Order Modal -->
+<div class="modal-overlay" id="order-modal">
+  <div class="modal">
+    <h3>Add Order</h3>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Date</label>
+        <input type="date" id="o-date">
+      </div>
+      <div class="form-group">
+        <label>Time</label>
+        <input type="text" id="o-time" placeholder="e.g. 18:30">
+      </div>
+      <div class="form-group">
+        <label>App</label>
+        <select id="o-app">
+          <option>Talabat</option><option>Deliveroo</option><option>Careem</option>
+          <option>Keeta</option><option>Noon</option><option>Whatsapp</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Restaurant</label>
+        <select id="o-rest">
+          <option value="ToB">Taste of Baku (ToB)</option>
+          <option value="Q">Qutab (Q)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Gross Amount (AED)</label>
+        <input type="number" id="o-amount" placeholder="0.00">
+      </div>
+      <div class="form-group">
+        <label>Order ID</label>
+        <input type="text" id="o-id" placeholder="App order ID">
+      </div>
+      <div class="form-group">
+        <label>Repeat Customer</label>
+        <select id="o-repeat">
+          <option value="">First time</option>
+          <option value="1">1 time before</option>
+          <option value="2">2 times before</option>
+          <option value="3+">3+ times</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="o-status">
+          <option value="completed">Completed</option>
+          <option value="complaint">Complaint</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+      <div class="form-group form-span-2">
+        <label>Order Items</label>
+        <textarea id="o-items" placeholder="e.g. 1x Dolma, 2x Qutab Meat..."></textarea>
+      </div>
+      <div class="form-group form-span-2">
+        <label>Notes / Complaints</label>
+        <textarea id="o-notes" placeholder="Any issues, complaints..."></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('order-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveOrder()">Save Order</button>
+    </div>
+  </div>
+</div>
+
+<!-- Kitchen Modal -->
+<div class="modal-overlay" id="kitchen-modal">
+  <div class="modal">
+    <h3>Kitchen Item to Buy</h3>
+    <div class="form-grid">
+      <div class="form-group form-span-2">
+        <label>Item Name (Əşyanın adı)</label>
+        <input type="text" id="k-name" placeholder="e.g. Mixing bowls">
+      </div>
+      <div class="form-group">
+        <label>Quantity (Ədəd)</label>
+        <input type="number" id="k-qty" placeholder="1">
+      </div>
+      <div class="form-group">
+        <label>When Needed</label>
+        <input type="date" id="k-when">
+      </div>
+      <div class="form-group">
+        <label>Estimated Cost (AED)</label>
+        <input type="number" id="k-cost" placeholder="0.00">
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="k-status">
+          <option value="pending">Need to Buy</option>
+          <option value="bought">Bought</option>
+        </select>
+      </div>
+      <div class="form-group form-span-2">
+        <label>Notes</label>
+        <textarea id="k-notes" placeholder="Size, specs, where to buy..."></textarea>
+      </div>
+      <div class="form-group form-span-2">
+        <label>Photo</label>
+        <div class="photo-upload" onclick="document.getElementById('k-photo').click()">
+          <p>📷 Click to upload photo</p>
+          <input type="file" id="k-photo" accept="image/*" multiple onchange="previewPhotos('k-photo', 'k-photo-preview')">
+        </div>
+        <div class="photo-grid" id="k-photo-preview"></div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('kitchen-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveKitchenItem()">Save Item</button>
+    </div>
+  </div>
+</div>
+
+<!-- Stock Modal -->
+<div class="modal-overlay" id="stock-modal">
+  <div class="modal">
+    <h3>Stock Item</h3>
+    <div class="form-grid">
+      <div class="form-group form-span-2">
+        <label>Item Name</label>
+        <input type="text" id="s-name" placeholder="e.g. Lamb mince">
+      </div>
+      <div class="form-group">
+        <label>Current Qty</label>
+        <input type="number" id="s-qty" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label>Unit</label>
+        <select id="s-unit">
+          <option>kg</option><option>g</option><option>L</option><option>pcs</option>
+          <option>boxes</option><option>bags</option><option>packs</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Min Stock Level</label>
+        <input type="number" id="s-min" placeholder="Reorder when below this">
+      </div>
+      <div class="form-group">
+        <label>Max Stock Level</label>
+        <input type="number" id="s-max" placeholder="Full stock level">
+      </div>
+      <div class="form-group">
+        <label>Cost per Unit (AED)</label>
+        <input type="number" id="s-cost" placeholder="0.00">
+      </div>
+      <div class="form-group">
+        <label>Last Restocked</label>
+        <input type="date" id="s-restock">
+      </div>
+      <div class="form-group form-span-2">
+        <label>Photo</label>
+        <div class="photo-upload" onclick="document.getElementById('s-photo').click()">
+          <p>📷 Click to upload photo of item</p>
+          <input type="file" id="s-photo" accept="image/*" onchange="previewPhotos('s-photo', 's-photo-preview')">
+        </div>
+        <div class="photo-grid" id="s-photo-preview"></div>
+      </div>
+      <div class="form-group form-span-2">
+        <label>Notes</label>
+        <textarea id="s-notes" placeholder="Supplier, storage notes..."></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('stock-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveStockItem()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Transaction Modal -->
+<div class="modal-overlay" id="tx-modal">
+  <div class="modal">
+    <h3>Add Transaction</h3>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Date</label>
+        <input type="date" id="tx-date">
+      </div>
+      <div class="form-group">
+        <label>Time</label>
+        <input type="text" id="tx-time" placeholder="—">
+      </div>
+      <div class="form-group form-span-2">
+        <label>Description</label>
+        <input type="text" id="tx-desc" placeholder="e.g. Lulu Hypermarket">
+      </div>
+      <div class="form-group">
+        <label>Amount (AED)</label>
+        <input type="number" id="tx-amount" placeholder="0.00" step="0.01">
+      </div>
+      <div class="form-group">
+        <label>Type</label>
+        <select id="tx-type">
+          <option value="expense">Expense (−)</option>
+          <option value="income">Income (+)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <select id="tx-cat">
+          <option>Groceries</option>
+          <option>Packaging</option>
+          <option>Transport</option>
+          <option>App Fees</option>
+          <option>Kitchen Equipment</option>
+          <option>Rent / Kitchen</option>
+          <option>Flights</option>
+          <option>Salary / Transfer</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Paid By</label>
+        <select id="tx-paid">
+          <option value="">—</option>
+          <option>Kamil M</option>
+          <option>Ziya M</option>
+          <option>Teymur M</option>
+          <option>Business Card</option>
+        </select>
+      </div>
+      <div class="form-group form-span-2">
+        <label>Notes</label>
+        <textarea id="tx-notes" placeholder="Any extra info..."></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('tx-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTx()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Receipt Modal -->
+<div class="modal-overlay" id="receipt-modal">
+  <div class="modal">
+    <h3>Add Receipt</h3>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Date</label>
+        <input type="date" id="r-date">
+      </div>
+      <div class="form-group">
+        <label>Vendor</label>
+        <input type="text" id="r-vendor" placeholder="e.g. Lulu Hypermarket">
+      </div>
+      <div class="form-group">
+        <label>Amount (AED)</label>
+        <input type="number" id="r-amount" placeholder="0.00">
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <select id="r-cat">
+          <option>Groceries</option><option>Packaging</option><option>Transport</option>
+          <option>Equipment</option><option>Other</option>
+        </select>
+      </div>
+      <div class="form-group form-span-2">
+        <label>Notes</label>
+        <textarea id="r-notes" placeholder="What was bought..."></textarea>
+      </div>
+      <div class="form-group form-span-2">
+        <label>Receipt Photos</label>
+        <div class="photo-upload" onclick="document.getElementById('r-photo').click()">
+          <p>📷 Upload receipt photo(s)</p>
+          <input type="file" id="r-photo" accept="image/*" multiple onchange="previewPhotos('r-photo', 'r-photo-preview')">
+        </div>
+        <div class="photo-grid" id="r-photo-preview"></div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('receipt-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveReceipt()">Save Receipt</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ========== DATA ==========
+let editingId = null;
+
+const DEFAULT_DATA = {
+  settings: { talabat: 32, deliveroo: 30, careem: 25, keeta: 30, noon: 25, whatsapp: 0 },
+  orders: [
+    { id: 1, date: '2026-04-13', time: '15:46', app: 'Talabat', rest: 'ToB', amount: 106, orderId: '3564536928', items: '1x Dolma, 1x Blicnik crepe 3pcs', notes: '', status: 'completed', repeat: '' },
+    { id: 2, date: '2026-04-13', time: '18:51', app: 'Talabat', rest: 'Q', amount: 90, orderId: '3564872408', items: '3x Qutab Meat, 3x Qutab Greens', notes: '', status: 'completed', repeat: '' },
+    { id: 3, date: '2026-04-13', time: '20:51', app: 'Talabat', rest: 'Q', amount: 120, orderId: '3565150901', items: '2x Qutab Meat 2x Qutab Greens 2x Qutab cheese 2x Qutab Pumpkin', notes: '', status: 'completed', repeat: '' },
+    { id: 4, date: '2026-04-13', time: '18:46', app: 'Deliveroo', rest: 'ToB', amount: 149, orderId: '6788', items: '1x Russian Salad, 1x Tandoor Bread, 1x Kufta Bozbash, 1x Vinaigrette salad', notes: '', status: 'completed', repeat: '' },
+    { id: 5, date: '2026-04-14', time: '17:29', app: 'Talabat', rest: 'ToB', amount: 109, orderId: '3566590973', items: '1x Pirojki patato 3pcs, 1x russian salad, 1x blicnkin with meet crepes 3pcs, 1x fanta 330ml', notes: '', status: 'completed', repeat: '' },
+    { id: 6, date: '2026-04-14', time: '21:22', app: 'Talabat', rest: 'ToB', amount: 104, orderId: '3567097707', items: '1x Blinchik with cheese 3pcs, 1x kufta bozbash', notes: '', status: 'completed', repeat: '' },
+    { id: 7, date: '2026-04-14', time: '18:11', app: 'Careem', rest: 'Q', amount: 42, orderId: '155139936', items: '1x Meat qutab, 1x cheese qutab, 1x greens qutab, 1x pumpkin qutab', notes: '', status: 'completed', repeat: '1' },
+    { id: 8, date: '2026-04-14', time: '19:52', app: 'Careem', rest: 'Q', amount: 77, orderId: '155146555', items: '1x Protein combo, 1x hommade ayran', notes: '', status: 'completed', repeat: '1' },
+    { id: 9, date: '2026-04-14', time: '20:56', app: 'Deliveroo', rest: 'Q', amount: 102, orderId: '8553', items: '1x Qutab Greens, 1x Qutab Meat, 1x Tandoor Dolma', notes: '', status: 'completed', repeat: '' },
+    { id: 10, date: '2026-04-14', time: '21:02', app: 'Deliveroo', rest: 'Q', amount: 98, orderId: '5416', items: '3x Qutab Meat, 3x Qutab Greens, 1x Tandoor Bread', notes: '', status: 'completed', repeat: '' },
+    { id: 11, date: '2026-04-14', time: '19:29', app: 'Deliveroo', rest: 'ToB', amount: 163, orderId: '1902', items: '1x Shepherds choban salad, 1x Kufta Bozbash, 1x Cabbage dolma stuffed rolls', notes: '', status: 'completed', repeat: '' },
+    { id: 12, date: '2026-04-14', time: '21:21', app: 'Deliveroo', rest: 'ToB', amount: 135, orderId: '3318', items: '1x Cabbage dolma stuffed rolls, 1x Azerbaijani Dovga, 1x Vinaigrette salad', notes: '', status: 'completed', repeat: '' },
+    { id: 13, date: '2026-04-15', time: '13:32', app: 'Talabat', rest: 'ToB', amount: 143, orderId: '3568070166', items: '1x Sabzi Plov with meat, 1x Dolma with fresh vine leaves', notes: '', status: 'completed', repeat: '' },
+    { id: 14, date: '2026-04-15', time: '16:57', app: 'Talabat', rest: 'Q', amount: 177, orderId: '3568419703', items: '1x Pirojki Meat 3pcs, 1x Pirojki patato 3pcs, 1x Vingret salad, 2x Qutab meat, 1x qutab cheese, 1x qutab pumpkin, 1x ovdug', notes: '', status: 'completed', repeat: '' },
+    { id: 15, date: '2026-04-15', time: '18:02', app: 'Talabat', rest: 'ToB', amount: 111, orderId: '3568538895', items: '1x Tomato and egg, 1x shepherds salad, 1x dushbara', notes: '', status: 'completed', repeat: '' },
+    { id: 16, date: '2026-04-15', time: '18:19', app: 'Talabat', rest: 'ToB', amount: 112, orderId: '3568571476', items: '1x Ash gara, 1x blicnkhik with meat 3pcs', notes: '', status: 'completed', repeat: '' },
+    { id: 17, date: '2026-04-15', time: '20:15', app: 'Talabat', rest: 'ToB', amount: 283, orderId: '3568825765', items: '1x Russian salad, 1x Traditional Dolma fresh vine leaves, 2x kufta bozbash, 1x blinchik with beef 3pcs', notes: '', status: 'completed', repeat: '' },
+    { id: 18, date: '2026-04-15', time: '17:55', app: 'Careem', rest: 'ToB', amount: 72.80, orderId: '155233384', items: '1x Sabzi Plov, 1x vinaigrette salad', notes: '', status: 'completed', repeat: '' },
+    { id: 19, date: '2026-04-15', time: '20:33', app: 'Deliveroo', rest: 'ToB', amount: 64, orderId: '6428', items: '1x Cabbage dolma stuffed rolls', notes: '', status: 'completed', repeat: '' },
+    { id: 20, date: '2026-04-15', time: '15:41', app: 'Deliveroo', rest: 'Q', amount: 124, orderId: '5081', items: '4x Dovga, 4x Qutab with meat', notes: '', status: 'completed', repeat: '' },
+    { id: 21, date: '2026-04-16', time: '10:34', app: 'Talabat', rest: 'ToB', amount: 126, orderId: '3569753402', items: '1x Azerbaijani dovga, 1x pirojki patato 3pcs, 1x blini crepes 3pcs, 1x greek salad', notes: '', status: 'completed', repeat: '' },
+    { id: 22, date: '2026-04-16', time: '15:36', app: 'Talabat', rest: 'ToB', amount: 101, orderId: '35702000312', items: '1x Russian salad, 1x Cabbage dolma', notes: '', status: 'completed', repeat: '' },
+    { id: 23, date: '2026-04-16', time: '21:06', app: 'Keeta', rest: 'ToB', amount: 115, orderId: '569', items: '1x Qutab meat, 1x blicnik meet 3pcs, 1x dolma', notes: '', status: 'completed', repeat: '' },
+    { id: 24, date: '2026-04-16', time: '12:10', app: 'Careem', rest: 'Q', amount: 32.20, orderId: '155295832', items: '1x cheese qutab 1x meat qutab 1x greens qutab', notes: '', status: 'completed', repeat: '3+' },
+    { id: 25, date: '2026-04-16', time: '17:18', app: 'Careem', rest: 'ToB', amount: 47.60, orderId: '155323230', items: '1x Sabzi Plov', notes: '', status: 'completed', repeat: '1' },
+    { id: 26, date: '2026-04-16', time: '12:31', app: 'Deliveroo', rest: 'Q', amount: 132, orderId: '1730', items: '2x Qutab meat, 2x Qutab greens, 1x tandoor dolma', notes: '', status: 'completed', repeat: '' },
+    { id: 27, date: '2026-04-16', time: '18:23', app: 'Deliveroo', rest: 'Q', amount: 95, orderId: '1150', items: '1x Lavangi Tandoor', notes: '', status: 'completed', repeat: '' },
+    { id: 28, date: '2026-04-16', time: '16:02', app: 'Deliveroo', rest: 'ToB', amount: 104, orderId: '9849', items: '1x greek salad, 1x kufta bozbash', notes: '', status: 'completed', repeat: '' },
+    { id: 29, date: '2026-04-16', time: '19:26', app: 'Deliveroo', rest: 'ToB', amount: 119, orderId: '5277', items: '1x green qutab, 1x pumpkin qutab, 1x meat qutab, 1x dolma', notes: '', status: 'completed', repeat: '' },
+    { id: 30, date: '2026-04-17', time: '14:55', app: 'Talabat', rest: 'ToB', amount: 125, orderId: '3572119843', items: '1x Chicken chigirtma, 1x okroshka, 1x pirojki patato 3pcs', notes: '', status: 'completed', repeat: '' },
+    { id: 31, date: '2026-04-17', time: '16:02', app: 'Talabat', rest: 'ToB', amount: 123, orderId: '3572250720', items: '1x Uzbek Plov, 2x Okroshka', notes: '', status: 'completed', repeat: '' },
+    { id: 32, date: '2026-04-17', time: '16:17', app: 'Talabat', rest: 'Q', amount: 100, orderId: '3572277877', items: '1x Classic qutab Combo, 1x Pirojki Patato 3pcs', notes: '', status: 'completed', repeat: '' },
+    { id: 33, date: '2026-04-17', time: '18:54', app: 'Talabat', rest: 'ToB', amount: 29, orderId: '3572590625', items: '1x shepherds choban salad, 1x blicnik with meet stuffed 3pcs', notes: 'Complaint: no blinchik arrived with meat 3pcs', status: 'complaint', repeat: '' },
+    { id: 34, date: '2026-04-17', time: '19:48', app: 'Talabat', rest: 'ToB', amount: 132, orderId: '3572716357', items: '1x Russian salad, 1x Chicken Chighirtma, 1x okroshka', notes: '', status: 'completed', repeat: '' },
+    { id: 35, date: '2026-04-17', time: '21:26', app: 'Talabat', rest: 'ToB', amount: 95, orderId: '3572968426', items: '1x chicken tandoor levengi', notes: '', status: 'completed', repeat: '' },
+    { id: 36, date: '2026-04-17', time: '21:44', app: 'Talabat', rest: 'Q', amount: 120, orderId: '3573014343', items: '3x Pirojki Patato 3pcs, 1x dovga, 1x ayran', notes: '', status: 'completed', repeat: '' },
+    { id: 37, date: '2026-04-17', time: '20:39', app: 'Careem', rest: 'Q', amount: 64.40, orderId: '155452760', items: '1x Street combo, 1x Yogurt dovga', notes: '', status: 'completed', repeat: '1' },
+    { id: 38, date: '2026-04-17', time: '19:06', app: 'Deliveroo', rest: 'ToB', amount: 94, orderId: '783', items: '2x Qutab Greens, 2x Qutab pumpkin, 2x Qutab Meat', notes: '', status: 'completed', repeat: '' },
+    { id: 39, date: '2026-04-17', time: '20:15', app: 'Deliveroo', rest: 'ToB', amount: 74, orderId: '6193', items: '2x Okroshka soup Sausage', notes: '', status: 'completed', repeat: '' },
+    { id: 40, date: '2026-04-18', time: '13:25', app: 'Deliveroo', rest: 'Q', amount: 116, orderId: '8529', items: '1x Dolma Tandoor, 1x Tandoor bread, 1x pirojki meat 3pcs', notes: '', status: 'completed', repeat: '' },
+    { id: 41, date: '2026-04-18', time: '14:08', app: 'Deliveroo', rest: 'ToB', amount: 232, orderId: '778', items: '1x Dushbara, 5x qutab with meat, 1x Tandoor Lavangi, 1x Tandoor bread', notes: '', status: 'completed', repeat: '' },
+    { id: 42, date: '2026-04-18', time: '14:38', app: 'Deliveroo', rest: 'ToB', amount: 109, orderId: '8683', items: '2x Qutab Herbs, 2x qutab meat, 1x dovga', notes: '', status: 'completed', repeat: '' },
+    { id: 43, date: '2026-04-18', time: '17:19', app: 'Deliveroo', rest: 'ToB', amount: 92, orderId: '3118', items: '2x Dovga, 1x Mashed patatos', notes: '', status: 'completed', repeat: '' },
+    { id: 44, date: '2026-04-18', time: '10:49', app: 'Talabat', rest: 'ToB', amount: 72, orderId: '3573769869', items: '1x Tomato and egg, 1x blinchik with beef 3pcs', notes: '', status: 'completed', repeat: '' },
+    { id: 45, date: '2026-04-18', time: '10:58', app: 'Talabat', rest: 'ToB', amount: 95, orderId: '3573778355', items: '1x Tandoor lavangi', notes: '', status: 'completed', repeat: '' },
+    { id: 46, date: '2026-04-18', time: '12:51', app: 'Talabat', rest: 'Q', amount: 164, orderId: '3573909343', items: '4x Qutab greens, 4x qutab meat, 2x qutab pumpkin, 2x tandoor bread', notes: '', status: 'completed', repeat: '' },
+    { id: 47, date: '2026-04-18', time: '18:46', app: 'Talabat', rest: 'ToB', amount: 173, orderId: '3574558507', items: '1x Greek salad, 1x pirojki meat 3pcs, 1x ayran, 1x lavangi', notes: '', status: 'completed', repeat: '' },
+    { id: 48, date: '2026-04-19', time: '13:18', app: 'Deliveroo', rest: 'ToB', amount: 46, orderId: '3790', items: '1x Tomato and egg with tandoor bread', notes: '', status: 'completed', repeat: '' },
+    { id: 49, date: '2026-04-19', time: '14:11', app: 'Deliveroo', rest: 'ToB', amount: 92, orderId: '4552', items: '1x Qutab Meat, 1x Qutab Herbs, 1x Qutab Pumpkin, 1x Dovga with tandoor', notes: '', status: 'completed', repeat: '' },
+    { id: 50, date: '2026-04-19', time: '14:51', app: 'Talabat', rest: 'Q', amount: 105, orderId: '3576052864', items: '1x Pirojki patato 3pcs, 2x qutab meat, 2x qutab greens, 1x dovga', notes: '', status: 'completed', repeat: '' },
+    { id: 51, date: '2026-04-19', time: '15:34', app: 'Talabat', rest: 'Q', amount: 85, orderId: '3576128231', items: '1x Classic Qutab combo, 1x Dovga', notes: '', status: 'completed', repeat: '' },
+    { id: 52, date: '2026-04-19', time: '16:10', app: 'Talabat', rest: 'ToB', amount: 60, orderId: '3576190252', items: '1x Pirojki patato 3pcs, 1x pirojki meat 3pcs', notes: '', status: 'completed', repeat: '' },
+    { id: 53, date: '2026-04-19', time: '16:22', app: 'Talabat', rest: 'ToB', amount: 94, orderId: '3576210619', items: '1x Dolma, 1x pirojki patato 3pcs', notes: '', status: 'completed', repeat: '' },
+    { id: 54, date: '2026-04-19', time: '16:44', app: 'Talabat', rest: 'ToB', amount: 72, orderId: '3576249700', items: '1x Tomato and egg, 1x dogramac', notes: '', status: 'completed', repeat: '' },
+    { id: 55, date: '2026-04-19', time: '18:12', app: 'Talabat', rest: 'Q', amount: 39, orderId: '3576413560', items: '1x Dovga, 1x Tandoor bread, 1x Qutab Cheese', notes: '', status: 'completed', repeat: '' },
+    { id: 56, date: '2026-04-19', time: '14:42', app: 'Careem', rest: 'Q', amount: 55, orderId: '155612426', items: '1x Street Combo', notes: '', status: 'completed', repeat: '1' },
+    { id: 57, date: '2026-04-19', time: '17:14', app: 'Careem', rest: 'Q', amount: 43, orderId: '155628258', items: '2x Pumpkin Qutab, 1x ovdug', notes: '', status: 'completed', repeat: '1' },
+    { id: 58, date: '2026-04-19', time: '20:42', app: 'Talabat', rest: 'ToB', amount: 37, orderId: '3576757407', items: '1x Russian salad, 1x Azerbaijani tandoor bread, 1x Pirojki patato 3pcs', notes: '', status: 'completed', repeat: '' },
+    { id: 59, date: '2026-04-19', time: '21:30', app: 'Talabat', rest: 'ToB', amount: 71, orderId: '3576882196', items: '1x Russian salad, 1x greek salad', notes: '', status: 'completed', repeat: '' },
+    { id: 60, date: '2026-04-19', time: '19:12', app: 'Deliveroo', rest: 'Q', amount: 171, orderId: '2486', items: '2x Qutab meat, 1x dushbere, 1x tandoor lavangi', notes: '', status: 'completed', repeat: '' },
+    { id: 61, date: '2026-04-20', time: '10:47', app: 'Talabat', rest: 'ToB', amount: 264, orderId: '3577601760', items: '2x Azerbaijani Tandoor bread, 1x dovga, 1x Dushbara, 4x qutab green and meat and pumpkin 1pc, 1x tandoor lavangi', notes: '', status: 'completed', repeat: '' },
+    { id: 62, date: '2026-04-20', time: '11:02', app: 'Talabat', rest: 'Q', amount: 24, orderId: '3577615741', items: '3x Tandoor bread', notes: '', status: 'completed', repeat: '' },
+    { id: 63, date: '2026-04-20', time: '12:34', app: 'Talabat', rest: 'ToB', amount: 234, orderId: '3577720656', items: '1x tandoor bread, 2x qutab, 1x vinegret salad, 2x ashgara', notes: '', status: 'completed', repeat: '' },
+    { id: 64, date: '2026-04-20', time: '13:07', app: 'Talabat', rest: 'ToB', amount: 104, orderId: '3577767171', items: '1x Rice pilaf with saffron, 1x chicken chigirtma, 2x azerbaijani tandoor bread, 1x coca cola 330ml', notes: '', status: 'completed', repeat: '' },
+    { id: 65, date: '2026-04-20', time: '13:36', app: 'Deliveroo', rest: 'Q', amount: 0, orderId: '', items: '', notes: 'Order pending', status: 'completed', repeat: '' },
+  ],
+  transactions: [
+    { id: 1, date: '2026-04-01', time: '—', desc: 'From KAMIL MANAFOV', amount: 5650, type: 'income', cat: 'Salary / Transfer', paid: 'Kamil M', notes: '' },
+    { id: 2, date: '2026-04-02', time: '—', desc: 'From ZIYA BAGHIRLI', amount: 6654, type: 'income', cat: 'Salary / Transfer', paid: 'Ziya M', notes: '' },
+    { id: 3, date: '2026-04-03', time: '—', desc: 'From ZIYA BAGHIRLI', amount: 5788, type: 'income', cat: 'Salary / Transfer', paid: 'Ziya M', notes: '' },
+    { id: 4, date: '2026-04-03', time: '—', desc: 'From ZIYA BAGHIRLI', amount: 1313, type: 'income', cat: 'Salary / Transfer', paid: 'Ziya M', notes: '' },
+    { id: 5, date: '2026-04-04', time: '—', desc: 'Flydubai', amount: 5787.76, type: 'expense', cat: 'Flights', paid: 'Business Card', notes: '' },
+    { id: 6, date: '2026-04-04', time: '—', desc: 'Foreign exchange fee', amount: 115.75, type: 'expense', cat: 'Other', paid: 'Business Card', notes: '' },
+    { id: 7, date: '2026-04-05', time: '—', desc: 'Talabat', amount: 1313, type: 'expense', cat: 'App Fees', paid: 'Business Card', notes: '' },
+    { id: 8, date: '2026-04-06', time: '—', desc: 'Fusion Foodie Zone Kitchen LLC', amount: 11287.5, type: 'expense', cat: 'Rent / Kitchen', paid: 'Business Card', notes: '' },
+    { id: 9, date: '2026-04-11', time: '—', desc: 'From KAMIL MANAFOV', amount: 1010, type: 'income', cat: 'Salary / Transfer', paid: 'Kamil M', notes: '' },
+    { id: 10, date: '2026-04-14', time: '—', desc: 'Nownow', amount: 39.31, type: 'expense', cat: 'Other', paid: 'Business Card', notes: '' },
+    { id: 11, date: '2026-04-15', time: '—', desc: 'Flydubai (app)', amount: 2246.28, type: 'expense', cat: 'Flights', paid: 'Business Card', notes: '' },
+    { id: 12, date: '2026-04-15', time: '—', desc: 'From ZIYA BAGHIRLI', amount: 2500, type: 'income', cat: 'Salary / Transfer', paid: 'Ziya M', notes: '' },
+    { id: 13, date: '2026-04-16', time: '—', desc: 'Gogetit technologies (transport)', amount: 5.5, type: 'expense', cat: 'Transport', paid: 'Business Card', notes: 'Delivery WhatsApp' },
+    { id: 14, date: '2026-04-16', time: '—', desc: 'Gogetit technologies (transport)', amount: 50, type: 'expense', cat: 'Transport', paid: 'Business Card', notes: '' },
+    { id: 15, date: '2026-04-16', time: '—', desc: 'Gogetit technologies (transport)', amount: 20, type: 'expense', cat: 'Transport', paid: 'Business Card', notes: '' },
+    { id: 16, date: '2026-04-16', time: '—', desc: 'Lulu Hypermarket', amount: 47.4, type: 'expense', cat: 'Groceries', paid: 'Business Card', notes: '' },
+    { id: 17, date: '2026-04-16', time: '—', desc: 'Lulu Hypermarket', amount: 735.45, type: 'expense', cat: 'Groceries', paid: 'Business Card', notes: '' },
+    { id: 18, date: '2026-04-17', time: '—', desc: 'Al Braik Fruits LLC', amount: 80, type: 'expense', cat: 'Groceries', paid: 'Business Card', notes: '' },
+    { id: 19, date: '2026-04-17', time: '—', desc: 'Hot Pack Packaging LLC (bank)', amount: 55.5, type: 'expense', cat: 'Packaging', paid: 'Business Card', notes: '' },
+    { id: 20, date: '2026-04-17', time: '—', desc: 'Roaya Almustaqbal', amount: 8, type: 'expense', cat: 'Other', paid: 'Business Card', notes: '' },
+    { id: 21, date: '2026-04-17', time: '—', desc: 'Lulu Hypermarket', amount: 47.4, type: 'expense', cat: 'Groceries', paid: 'Business Card', notes: '' },
+    { id: 22, date: '2026-04-17', time: '—', desc: 'Lulu Hypermarket', amount: 735.45, type: 'expense', cat: 'Groceries', paid: 'Business Card', notes: '' },
+    { id: 23, date: '2026-04-17', time: '12:05', desc: 'Lulu Hypermarket', amount: 158.25, type: 'expense', cat: 'Groceries', paid: 'Teymur M', notes: '' },
+    { id: 24, date: '2026-04-18', time: '12:18', desc: 'Lulu Hypermarket (groceries receipt)', amount: 121.15, type: 'expense', cat: 'Groceries', paid: 'Ziya M', notes: '' },
+    { id: 25, date: '2026-04-18', time: '—', desc: 'Hotpack Packaging LLC (receipt)', amount: 62.4, type: 'expense', cat: 'Packaging', paid: 'Kamil M', notes: '' },
+    { id: 26, date: '2026-04-18', time: '22:23', desc: 'ADCB Merchant – Vehicle Testing', amount: 157.5, type: 'expense', cat: 'Transport', paid: 'Kamil M', notes: '' },
+    { id: 27, date: '2026-04-19', time: '10:47', desc: 'Lulu Hypermarket (groceries receipt)', amount: 202, type: 'expense', cat: 'Groceries', paid: '', notes: '' },
+    { id: 28, date: '2026-04-18', time: '—', desc: 'Network purchase (packet)', amount: 25, type: 'expense', cat: 'Other', paid: 'Ziya M', notes: '' },
+  ],
+  kitchen: [],
+  stock: [],
+  receipts: [],
+  nextOrderId: 66,
+  nextTxId: 29,
+  nextKitchenId: 1,
+  nextStockId: 1,
+  nextReceiptId: 1,
+};
+
+let DATA = JSON.parse(localStorage.getItem('tob_data') || 'null') || DEFAULT_DATA;
+let ordersFilter = 'all';
+let kitchenFilter = 'all';
+let stockFilter = 'all';
+let txFilter = 'all';
+let orderSearch = '';
+
+function save() { localStorage.setItem('tob_data', JSON.stringify(DATA)); }
+
+// ========== NAVIGATION ==========
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  event.currentTarget.classList.add('active');
+  renderPage(id);
+}
+
+function renderPage(id) {
+  if (id === 'dashboard') renderDashboard();
+  if (id === 'orders') renderOrders();
+  if (id === 'kitchen') renderKitchen();
+  if (id === 'stock') renderStock();
+  if (id === 'transactions') renderTransactions();
+  if (id === 'receipts') renderReceipts();
+  if (id === 'pnl') renderPnL();
+  if (id === 'settings') loadSettings();
+}
+
+// ========== DELIVERY CALC ==========
+function getPct(app) {
+  const a = app.toLowerCase();
+  const s = DATA.settings;
+  if (a === 'talabat') return s.talabat / 100;
+  if (a === 'deliveroo') return s.deliveroo / 100;
+  if (a === 'careem') return s.careem / 100;
+  if (a === 'keeta') return s.keeta / 100;
+  if (a === 'noon') return s.noon / 100;
+  return 0;
+}
+
+function netEarned(order) {
+  return order.amount * (1 - getPct(order.app));
+}
+
+// ========== DASHBOARD ==========
+function renderDashboard() {
+  const orders = DATA.orders.filter(o => o.amount > 0);
+  const totalGross = orders.reduce((s, o) => s + o.amount, 0);
+  const totalNet = orders.reduce((s, o) => s + netEarned(o), 0);
+  const totalExpenses = DATA.transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  const totalIncome = DATA.transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const pnl = totalNet + totalIncome - totalExpenses;
+
+  const stats = [
+    { label: 'Total Orders', value: orders.length, sub: 'All apps', cls: 'blue' },
+    { label: 'Gross Sales', value: 'AED ' + totalGross.toFixed(0), sub: 'Before commission', cls: 'gold' },
+    { label: 'Net Earnings', value: 'AED ' + totalNet.toFixed(0), sub: 'After app fees', cls: 'green' },
+    { label: 'Total Expenses', value: 'AED ' + totalExpenses.toFixed(0), sub: 'All categories', cls: 'red' },
+    { label: 'P&L (April)', value: (pnl >= 0 ? '+' : '') + 'AED ' + pnl.toFixed(0), sub: 'Net + Transfers - Expenses', cls: pnl >= 0 ? 'green' : 'red' },
+    { label: 'Low Stock Items', value: DATA.stock.filter(s => s.qty <= s.min).length, sub: 'Need restocking', cls: 'red' },
+  ];
+
+  document.getElementById('dashboard-stats').innerHTML = stats.map(s => `
+    <div class="stat-card ${s.cls}">
+      <div class="label">${s.label}</div>
+      <div class="value">${s.value}</div>
+      <div class="sub">${s.sub}</div>
+    </div>
+  `).join('');
+
+  // App performance
+  const apps = ['Deliveroo', 'Talabat', 'Careem', 'Keeta', 'Noon', 'Whatsapp'];
+  const appRows = apps.map(app => {
+    const appOrders = orders.filter(o => o.app === app);
+    const gross = appOrders.reduce((s, o) => s + o.amount, 0);
+    const net = appOrders.reduce((s, o) => s + netEarned(o), 0);
+    return { app, count: appOrders.length, gross, net };
+  }).filter(r => r.count > 0);
+
+  document.getElementById('app-performance-table').innerHTML = `
+    <table>
+      <thead><tr><th>App</th><th>Orders</th><th>Gross (AED)</th><th>Net (AED)</th><th>Commission</th></tr></thead>
+      <tbody>${appRows.map(r => `
+        <tr>
+          <td><span class="badge badge-${r.app.toLowerCase()}">${r.app}</span></td>
+          <td>${r.count}</td>
+          <td>${r.gross.toFixed(0)}</td>
+          <td>${r.net.toFixed(0)}</td>
+          <td>${(DATA.settings[r.app.toLowerCase()] || 0)}%</td>
+        </tr>
+      `).join('')}</tbody>
+    </table>`;
+
+  // Recent orders
+  const recent = [...DATA.orders].reverse().slice(0, 8);
+  document.getElementById('recent-orders-preview').innerHTML = `
+    <table>
+      <thead><tr><th>Date</th><th>App</th><th>Restaurant</th><th>AED</th></tr></thead>
+      <tbody>${recent.filter(o => o.amount > 0).map(o => `
+        <tr>
+          <td>${o.date.slice(5)}</td>
+          <td><span class="badge badge-${o.app.toLowerCase()}">${o.app}</span></td>
+          <td><span class="badge badge-${o.rest === 'ToB' ? 'tob' : 'q'}">${o.rest}</span></td>
+          <td>${o.amount}</td>
+        </tr>
+      `).join('')}</tbody>
+    </table>`;
+}
+
+// ========== ORDERS ==========
+function renderOrders() {
+  // Build filter bar
+  const apps = ['all', 'Talabat', 'Deliveroo', 'Careem', 'Keeta', 'Noon', 'Whatsapp', 'ToB', 'Q'];
+  document.getElementById('order-filter-bar').innerHTML = apps.map(a => `
+    <button class="filter-btn ${ordersFilter === a ? 'active' : ''}" onclick="setOrderFilter('${a}', this)">${a === 'all' ? 'All' : a}</button>
+  `).join('');
+
+  let filtered = DATA.orders;
+  if (ordersFilter !== 'all') {
+    if (['ToB', 'Q'].includes(ordersFilter)) filtered = filtered.filter(o => o.rest === ordersFilter);
+    else filtered = filtered.filter(o => o.app === ordersFilter);
+  }
+  if (orderSearch) filtered = filtered.filter(o =>
+    o.items.toLowerCase().includes(orderSearch.toLowerCase()) ||
+    o.notes.toLowerCase().includes(orderSearch.toLowerCase()) ||
+    o.orderId.includes(orderSearch)
+  );
+
+  const totalGross = filtered.reduce((s, o) => s + o.amount, 0);
+  const totalNet = filtered.reduce((s, o) => s + netEarned(o), 0);
+  document.getElementById('orders-count').textContent = `${filtered.length} orders — AED ${totalGross.toFixed(0)} gross / AED ${totalNet.toFixed(0)} net`;
+
+  document.getElementById('orders-table-body').innerHTML = filtered.length ? filtered.map((o, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td>${o.date}</td>
+      <td>${o.time}</td>
+      <td><span class="badge badge-${o.app.toLowerCase()}">${o.app}</span></td>
+      <td><span class="badge badge-${o.rest === 'ToB' ? 'tob' : 'q'}">${o.rest}</span></td>
+      <td style="max-width:260px;font-size:12px;">${o.items}</td>
+      <td><b>${o.amount > 0 ? 'AED ' + o.amount.toFixed(2) : '—'}</b></td>
+      <td class="${netEarned(o) > 0 ? 'profit' : ''}">AED ${netEarned(o).toFixed(2)}</td>
+      <td style="font-size:11px;color:var(--muted)">${o.orderId}</td>
+      <td style="max-width:160px;font-size:11px;color:${o.status === 'complaint' ? 'var(--red)' : 'var(--muted)'}">${o.notes || ''}</td>
+      <td>
+        <div class="actions-cell">
+          <button class="icon-btn" onclick="editOrder(${o.id})">✏️</button>
+          <button class="icon-btn red" onclick="deleteOrder(${o.id})">🗑</button>
+        </div>
+      </td>
+    </tr>
+  `).join('') : '<tr><td colspan="11"><div class="empty-state"><div class="icon">📭</div>No orders found</div></td></tr>';
+}
+
+function setOrderFilter(f, el) {
+  ordersFilter = f;
+  renderOrders();
+}
+
+function filterOrders(q) { orderSearch = q; renderOrders(); }
+
+function editOrder(id) {
+  const o = DATA.orders.find(x => x.id === id);
+  if (!o) return;
+  editingId = id;
+  document.getElementById('o-date').value = o.date;
+  document.getElementById('o-time').value = o.time;
+  document.getElementById('o-app').value = o.app;
+  document.getElementById('o-rest').value = o.rest;
+  document.getElementById('o-amount').value = o.amount;
+  document.getElementById('o-id').value = o.orderId;
+  document.getElementById('o-items').value = o.items;
+  document.getElementById('o-notes').value = o.notes;
+  document.getElementById('o-status').value = o.status || 'completed';
+  document.getElementById('o-repeat').value = o.repeat || '';
+  openModal('order-modal');
+}
+
+function saveOrder() {
+  const o = {
+    date: document.getElementById('o-date').value,
+    time: document.getElementById('o-time').value,
+    app: document.getElementById('o-app').value,
+    rest: document.getElementById('o-rest').value,
+    amount: parseFloat(document.getElementById('o-amount').value) || 0,
+    orderId: document.getElementById('o-id').value,
+    items: document.getElementById('o-items').value,
+    notes: document.getElementById('o-notes').value,
+    status: document.getElementById('o-status').value,
+    repeat: document.getElementById('o-repeat').value,
+  };
+  if (!o.date || !o.app) { toast('Please fill in date and app'); return; }
+  if (editingId) {
+    const idx = DATA.orders.findIndex(x => x.id === editingId);
+    DATA.orders[idx] = { ...DATA.orders[idx], ...o };
+  } else {
+    o.id = DATA.nextOrderId++;
+    DATA.orders.push(o);
+  }
+  save(); closeModal('order-modal'); renderOrders(); toast('Order saved ✓');
+  editingId = null;
+}
+
+function deleteOrder(id) {
+  if (!confirm('Delete this order?')) return;
+  DATA.orders = DATA.orders.filter(o => o.id !== id);
+  save(); renderOrders(); toast('Deleted');
+}
+
+// ========== KITCHEN ==========
+function renderKitchen() {
+  let items = DATA.kitchen;
+  if (kitchenFilter !== 'all') items = items.filter(k => k.status === kitchenFilter);
+
+  document.getElementById('kitchen-table-body').innerHTML = items.length ? items.map(k => `
+    <tr>
+      <td><b>${k.name}</b></td>
+      <td>${k.qty || '—'}</td>
+      <td>${k.when || '—'}</td>
+      <td>${k.cost ? 'AED ' + k.cost : '—'}</td>
+      <td>
+        <span class="badge ${k.status === 'bought' ? 'badge-income' : 'badge-expense'}">
+          ${k.status === 'bought' ? '✅ Bought' : '🔴 Need to Buy'}
+        </span>
+      </td>
+      <td>
+        ${k.photos && k.photos.length ? `
+          <div style="display:flex;gap:4px;">
+            ${k.photos.slice(0,3).map(p => `<img src="${p}" style="width:32px;height:32px;object-fit:cover;border-radius:4px;border:1px solid var(--border)">`).join('')}
+          </div>` : '<span style="color:var(--muted);font-size:11px">—</span>'}
+      </td>
+      <td>
+        <div class="actions-cell">
+          <button class="icon-btn" onclick="toggleKitchenStatus(${k.id})">${k.status === 'bought' ? '↩' : '✓'}</button>
+          <button class="icon-btn" onclick="editKitchen(${k.id})">✏️</button>
+          <button class="icon-btn red" onclick="deleteKitchen(${k.id})">🗑</button>
+        </div>
+      </td>
+    </tr>
+  `).join('') : `<tr><td colspan="7"><div class="empty-state"><div class="icon">🛒</div>No kitchen items added yet<br><small>Add items you need to buy</small></div></td></tr>`;
+}
+
+function filterKitchen(f, el) {
+  kitchenFilter = f;
+  document.querySelectorAll('#page-kitchen .filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderKitchen();
+}
+
+function saveKitchenItem() {
+  const photos = Array.from(tempPhotos['k-photo'] || []);
+  const item = {
+    name: document.getElementById('k-name').value,
+    qty: document.getElementById('k-qty').value,
+    when: document.getElementById('k-when').value,
+    cost: parseFloat(document.getElementById('k-cost').value) || 0,
+    status: document.getElementById('k-status').value,
+    notes: document.getElementById('k-notes').value,
+    photos: photos,
+  };
+  if (!item.name) { toast('Enter item name'); return; }
+  if (editingId) {
+    const idx = DATA.kitchen.findIndex(x => x.id === editingId);
+    DATA.kitchen[idx] = { ...DATA.kitchen[idx], ...item };
+  } else {
+    item.id = DATA.nextKitchenId++;
+    DATA.kitchen.push(item);
+  }
+  save(); closeModal('kitchen-modal'); renderKitchen(); toast('Saved ✓');
+  editingId = null; tempPhotos = {};
+}
+
+function toggleKitchenStatus(id) {
+  const item = DATA.kitchen.find(k => k.id === id);
+  if (!item) return;
+  item.status = item.status === 'bought' ? 'pending' : 'bought';
+  save(); renderKitchen();
+}
+
+function editKitchen(id) {
+  const k = DATA.kitchen.find(x => x.id === id);
+  editingId = id;
+  document.getElementById('k-name').value = k.name;
+  document.getElementById('k-qty').value = k.qty;
+  document.getElementById('k-when').value = k.when;
+  document.getElementById('k-cost').value = k.cost;
+  document.getElementById('k-status').value = k.status;
+  document.getElementById('k-notes').value = k.notes;
+  openModal('kitchen-modal');
+}
+
+function deleteKitchen(id) {
+  if (!confirm('Delete?')) return;
+  DATA.kitchen = DATA.kitchen.filter(k => k.id !== id);
+  save(); renderKitchen();
+}
+
+// ========== STOCK ==========
+function renderStock() {
+  let items = DATA.stock;
+  if (stockFilter === 'low') items = items.filter(s => s.qty <= s.min);
+  if (stockFilter === 'ok') items = items.filter(s => s.qty > s.min);
+
+  document.getElementById('stock-grid').innerHTML = items.length ? items.map(s => {
+    const pct = s.max > 0 ? Math.min(100, (s.qty / s.max) * 100) : 50;
+    const isLow = s.qty <= s.min;
+    const color = isLow ? 'var(--red)' : pct < 60 ? 'var(--accent)' : 'var(--green)';
+    return `
+      <div class="stock-item">
+        ${s.photo ? `<img class="stock-photo" src="${s.photo}" alt="${s.name}">` :
+          `<div class="no-photo" onclick="addStockPhoto(${s.id})">📷</div>`}
+        <div class="item-name">${s.name}</div>
+        <div class="item-meta">${s.unit} · Last: ${s.restock || 'N/A'}</div>
+        <div class="item-count" style="color:${color}">${s.qty} <small style="font-size:13px;font-weight:400">${s.unit}</small></div>
+        ${s.min ? `<div class="item-meta">Min: ${s.min} · Max: ${s.max || '?'}</div>` : ''}
+        <div class="stock-bar"><div class="stock-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+        ${isLow ? `<div style="color:var(--red);font-size:11px;margin-top:6px;">⚠️ Low — needs restocking</div>` : ''}
+        ${s.notes ? `<div class="item-meta" style="margin-top:4px">${s.notes}</div>` : ''}
+        <div style="display:flex;gap:6px;margin-top:10px;">
+          <button class="icon-btn" onclick="editStock(${s.id})" style="flex:1;width:auto;padding:4px">✏️ Edit</button>
+          <button class="icon-btn red" onclick="deleteStock(${s.id})" style="flex:1;width:auto;padding:4px">🗑</button>
+        </div>
+      </div>`;
+  }).join('') : `<div class="empty-state" style="grid-column:1/-1"><div class="icon">📦</div>No stock items yet<br><small>Add what's in your kitchen</small></div>`;
+}
+
+function filterStock(f, el) {
+  stockFilter = f;
+  document.querySelectorAll('#page-stock .filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderStock();
+}
+
+function saveStockItem() {
+  const photo = tempPhotos['s-photo'] && tempPhotos['s-photo'][0] ? tempPhotos['s-photo'][0] : null;
+  const item = {
+    name: document.getElementById('s-name').value,
+    qty: parseFloat(document.getElementById('s-qty').value) || 0,
+    unit: document.getElementById('s-unit').value,
+    min: parseFloat(document.getElementById('s-min').value) || 0,
+    max: parseFloat(document.getElementById('s-max').value) || 0,
+    cost: parseFloat(document.getElementById('s-cost').value) || 0,
+    restock: document.getElementById('s-restock').value,
+    notes: document.getElementById('s-notes').value,
+    photo: photo,
+  };
+  if (!item.name) { toast('Enter item name'); return; }
+  if (editingId) {
+    const idx = DATA.stock.findIndex(x => x.id === editingId);
+    DATA.stock[idx] = { ...DATA.stock[idx], ...item, photo: photo || DATA.stock[idx].photo };
+  } else {
+    item.id = DATA.nextStockId++;
+    DATA.stock.push(item);
+  }
+  save(); closeModal('stock-modal'); renderStock(); toast('Saved ✓');
+  editingId = null; tempPhotos = {};
+}
+
+function editStock(id) {
+  const s = DATA.stock.find(x => x.id === id);
+  editingId = id;
+  document.getElementById('s-name').value = s.name;
+  document.getElementById('s-qty').value = s.qty;
+  document.getElementById('s-unit').value = s.unit;
+  document.getElementById('s-min').value = s.min;
+  document.getElementById('s-max').value = s.max;
+  document.getElementById('s-cost').value = s.cost;
+  document.getElementById('s-restock').value = s.restock;
+  document.getElementById('s-notes').value = s.notes;
+  openModal('stock-modal');
+}
+
+function deleteStock(id) {
+  if (!confirm('Delete?')) return;
+  DATA.stock = DATA.stock.filter(s => s.id !== id);
+  save(); renderStock();
+}
+
+// ========== TRANSACTIONS ==========
+function renderTransactions() {
+  let txs = DATA.transactions;
+  if (txFilter === 'income') txs = txs.filter(t => t.type === 'income');
+  if (txFilter === 'expense') txs = txs.filter(t => t.type === 'expense');
+
+  const totalIn = txs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const totalOut = txs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+
+  document.getElementById('tx-stats').innerHTML = `
+    <div class="stat-card green"><div class="label">Total Income</div><div class="value">AED ${totalIn.toFixed(0)}</div></div>
+    <div class="stat-card red"><div class="label">Total Expenses</div><div class="value">AED ${totalOut.toFixed(0)}</div></div>
+    <div class="stat-card ${totalIn - totalOut >= 0 ? 'green' : 'red'}"><div class="label">Net (shown)</div><div class="value">${totalIn - totalOut >= 0 ? '+' : ''}AED ${(totalIn - totalOut).toFixed(0)}</div></div>
+  `;
+
+  document.getElementById('tx-table-body').innerHTML = txs.map(t => `
+    <tr>
+      <td>${t.date}</td>
+      <td style="color:var(--muted);font-size:12px">${t.time}</td>
+      <td><b>${t.desc}</b>${t.notes ? `<div style="font-size:11px;color:var(--muted)">${t.notes}</div>` : ''}</td>
+      <td class="${t.type === 'income' ? 'profit' : 'loss'}"><b>${t.type === 'income' ? '+' : '-'}AED ${t.amount.toFixed(2)}</b></td>
+      <td><span class="badge badge-${t.type === 'income' ? 'income' : 'expense'}">${t.type}</span></td>
+      <td style="font-size:12px;color:var(--muted)">${t.paid || '—'}</td>
+      <td style="font-size:12px;color:var(--muted)">${t.cat}</td>
+      <td>
+        <div class="actions-cell">
+          <button class="icon-btn" onclick="editTx(${t.id})">✏️</button>
+          <button class="icon-btn red" onclick="deleteTx(${t.id})">🗑</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function filterTx(f, el) {
+  txFilter = f;
+  document.querySelectorAll('#page-transactions .filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderTransactions();
+}
+
+function editTx(id) {
+  const t = DATA.transactions.find(x => x.id === id);
+  editingId = id;
+  document.getElementById('tx-date').value = t.date;
+  document.getElementById('tx-time').value = t.time;
+  document.getElementById('tx-desc').value = t.desc;
+  document.getElementById('tx-amount').value = t.amount;
+  document.getElementById('tx-type').value = t.type === 'income' ? 'income' : 'expense';
+  document.getElementById('tx-cat').value = t.cat;
+  document.getElementById('tx-paid').value = t.paid || '';
+  document.getElementById('tx-notes').value = t.notes;
+  openModal('tx-modal');
+}
+
+function saveTx() {
+  const t = {
+    date: document.getElementById('tx-date').value,
+    time: document.getElementById('tx-time').value,
+    desc: document.getElementById('tx-desc').value,
+    amount: parseFloat(document.getElementById('tx-amount').value) || 0,
+    type: document.getElementById('tx-type').value,
+    cat: document.getElementById('tx-cat').value,
+    paid: document.getElementById('tx-paid').value,
+    notes: document.getElementById('tx-notes').value,
+  };
+  if (!t.date || !t.desc) { toast('Fill in date and description'); return; }
+  if (editingId) {
+    const idx = DATA.transactions.findIndex(x => x.id === editingId);
+    DATA.transactions[idx] = { ...DATA.transactions[idx], ...t };
+  } else {
+    t.id = DATA.nextTxId++;
+    DATA.transactions.push(t);
+  }
+  save(); closeModal('tx-modal'); renderTransactions(); toast('Saved ✓');
+  editingId = null;
+}
+
+function deleteTx(id) {
+  if (!confirm('Delete?')) return;
+  DATA.transactions = DATA.transactions.filter(t => t.id !== id);
+  save(); renderTransactions();
+}
+
+// ========== RECEIPTS ==========
+function renderReceipts() {
+  document.getElementById('receipts-table-body').innerHTML = DATA.receipts.length ? DATA.receipts.map(r => `
+    <tr>
+      <td>${r.date}</td>
+      <td><b>${r.vendor}</b></td>
+      <td>AED ${r.amount.toFixed(2)}</td>
+      <td><span class="badge badge-expense">${r.cat}</span></td>
+      <td>
+        ${r.photos && r.photos.length ? `
+          <div style="display:flex;gap:4px;">
+            ${r.photos.slice(0,3).map(p => `<img src="${p}" style="width:36px;height:36px;object-fit:cover;border-radius:4px;border:1px solid var(--border);cursor:pointer" onclick="viewPhoto('${p}')">`).join('')}
+            ${r.photos.length > 3 ? `<div style="width:36px;height:36px;border-radius:4px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted)">+${r.photos.length-3}</div>` : ''}
+          </div>` : `<span style="color:var(--muted);font-size:11px">—</span>`}
+      </td>
+      <td style="font-size:12px;color:var(--muted)">${r.notes || '—'}</td>
+      <td>
+        <div class="actions-cell">
+          <button class="icon-btn red" onclick="deleteReceipt(${r.id})">🗑</button>
+        </div>
+      </td>
+    </tr>
+  `).join('') : `<tr><td colspan="7"><div class="empty-state"><div class="icon">🗂️</div>No receipts yet<br><small>Upload receipt photos here</small></div></td></tr>`;
+}
+
+function saveReceipt() {
+  const photos = Array.from(tempPhotos['r-photo'] || []);
+  const r = {
+    id: DATA.nextReceiptId++,
+    date: document.getElementById('r-date').value,
+    vendor: document.getElementById('r-vendor').value,
+    amount: parseFloat(document.getElementById('r-amount').value) || 0,
+    cat: document.getElementById('r-cat').value,
+    notes: document.getElementById('r-notes').value,
+    photos: photos,
+  };
+  if (!r.vendor) { toast('Enter vendor name'); return; }
+  DATA.receipts.push(r);
+  save(); closeModal('receipt-modal'); renderReceipts(); toast('Receipt saved ✓');
+  tempPhotos = {};
+}
+
+function deleteReceipt(id) {
+  if (!confirm('Delete?')) return;
+  DATA.receipts = DATA.receipts.filter(r => r.id !== id);
+  save(); renderReceipts();
+}
+
+// ========== P&L ==========
+function renderPnL() {
+  const orders = DATA.orders.filter(o => o.amount > 0);
+  const totalNet = orders.reduce((s, o) => s + netEarned(o), 0);
+  const expenses = DATA.transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  const transfers = DATA.transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const pnl = totalNet + transfers - expenses;
+
+  document.getElementById('pnl-stats').innerHTML = [
+    { label: 'Delivery Revenue (Net)', value: 'AED ' + totalNet.toFixed(2), cls: 'green' },
+    { label: 'Total Expenses', value: 'AED ' + expenses.toFixed(2), cls: 'red' },
+    { label: 'Capital Invested', value: 'AED ' + transfers.toFixed(2), cls: 'blue' },
+    { label: 'Final P&L', value: (pnl >= 0 ? '+' : '') + 'AED ' + pnl.toFixed(2), cls: pnl >= 0 ? 'green' : 'red', note: 'incl. all profits from delivery apps' },
+  ].map(s => `
+    <div class="stat-card ${s.cls}">
+      <div class="label">${s.label}</div>
+      <div class="value">${s.value}</div>
+      ${s.note ? `<div class="sub">${s.note}</div>` : ''}
+    </div>
+  `).join('');
+
+  // Revenue by app
+  const apps = ['Talabat', 'Deliveroo', 'Careem', 'Keeta', 'Noon', 'Whatsapp'];
+  document.getElementById('pnl-revenue-table').innerHTML = `<table>
+    <thead><tr><th>App</th><th>Orders</th><th>Gross</th><th>Commission</th><th>Net</th></tr></thead>
+    <tbody>${apps.map(app => {
+      const appOrders = orders.filter(o => o.app === app);
+      if (!appOrders.length) return '';
+      const gross = appOrders.reduce((s, o) => s + o.amount, 0);
+      const net = appOrders.reduce((s, o) => s + netEarned(o), 0);
+      return `<tr>
+        <td><span class="badge badge-${app.toLowerCase()}">${app}</span></td>
+        <td>${appOrders.length}</td>
+        <td>AED ${gross.toFixed(0)}</td>
+        <td>${(DATA.settings[app.toLowerCase()] || 0)}%</td>
+        <td class="profit">AED ${net.toFixed(0)}</td>
+      </tr>`;
+    }).join('')}
+    <tr style="border-top:2px solid var(--border);font-weight:600">
+      <td>TOTAL</td>
+      <td>${orders.length}</td>
+      <td>AED ${orders.reduce((s,o)=>s+o.amount,0).toFixed(0)}</td>
+      <td>—</td>
+      <td class="profit">AED ${totalNet.toFixed(0)}</td>
+    </tr></tbody>
+  </table>`;
+
+  // Expense by category
+  const cats = {};
+  DATA.transactions.filter(t => t.type === 'expense').forEach(t => {
+    cats[t.cat] = (cats[t.cat] || 0) + t.amount;
+  });
+  document.getElementById('pnl-expense-table').innerHTML = `<table>
+    <thead><tr><th>Category</th><th>Amount (AED)</th></tr></thead>
+    <tbody>${Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([cat, amt]) => `
+      <tr><td>${cat}</td><td class="loss">AED ${amt.toFixed(2)}</td></tr>
+    `).join('')}
+    <tr style="border-top:2px solid var(--border);font-weight:600">
+      <td>TOTAL</td><td class="loss">AED ${expenses.toFixed(2)}</td>
+    </tr></tbody>
+  </table>`;
+
+  // Daily P&L
+  const byDate = {};
+  orders.forEach(o => {
+    if (!byDate[o.date]) byDate[o.date] = { gross: 0, net: 0, orders: 0 };
+    byDate[o.date].gross += o.amount;
+    byDate[o.date].net += netEarned(o);
+    byDate[o.date].orders++;
+  });
+  document.getElementById('pnl-daily-table').innerHTML = `<table>
+    <thead><tr><th>Date</th><th>Orders</th><th>Gross (AED)</th><th>Net Revenue (AED)</th></tr></thead>
+    <tbody>${Object.entries(byDate).sort().map(([date, d]) => `
+      <tr>
+        <td>${date}</td>
+        <td>${d.orders}</td>
+        <td>AED ${d.gross.toFixed(0)}</td>
+        <td class="profit">AED ${d.net.toFixed(0)}</td>
+      </tr>
+    `).join('')}</tbody>
+  </table>`;
+}
+
+// ========== SETTINGS ==========
+function loadSettings() {
+  document.getElementById('pct-talabat').value = DATA.settings.talabat;
+  document.getElementById('pct-deliveroo').value = DATA.settings.deliveroo;
+  document.getElementById('pct-careem').value = DATA.settings.careem;
+  document.getElementById('pct-keeta').value = DATA.settings.keeta;
+  document.getElementById('pct-noon').value = DATA.settings.noon;
+  document.getElementById('pct-whatsapp').value = DATA.settings.whatsapp;
+}
+
+function saveSettings() {
+  DATA.settings.talabat = parseFloat(document.getElementById('pct-talabat').value) || 0;
+  DATA.settings.deliveroo = parseFloat(document.getElementById('pct-deliveroo').value) || 0;
+  DATA.settings.careem = parseFloat(document.getElementById('pct-careem').value) || 0;
+  DATA.settings.keeta = parseFloat(document.getElementById('pct-keeta').value) || 0;
+  DATA.settings.noon = parseFloat(document.getElementById('pct-noon').value) || 0;
+  DATA.settings.whatsapp = parseFloat(document.getElementById('pct-whatsapp').value) || 0;
+  save(); toast('Delivery percentages updated ✓');
+}
+
+// ========== PHOTOS ==========
+let tempPhotos = {};
+
+function previewPhotos(inputId, previewId) {
+  const input = document.getElementById(inputId);
+  const preview = document.getElementById(previewId);
+  if (!tempPhotos[inputId]) tempPhotos[inputId] = [];
+  preview.innerHTML = '';
+  Array.from(input.files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      tempPhotos[inputId].push(e.target.result);
+      const div = document.createElement('div');
+      div.className = 'photo-item';
+      div.innerHTML = `<img src="${e.target.result}"><button class="del-photo" onclick="removePreviewPhoto('${inputId}', '${previewId}', this)">×</button>`;
+      preview.appendChild(div);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function removePreviewPhoto(inputId, previewId, btn) {
+  const item = btn.parentElement;
+  const img = item.querySelector('img').src;
+  tempPhotos[inputId] = (tempPhotos[inputId] || []).filter(p => p !== img);
+  item.remove();
+}
+
+function viewPhoto(src) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:500;display:flex;align-items:center;justify-content:center;cursor:pointer';
+  overlay.innerHTML = `<img src="${src}" style="max-width:90vw;max-height:90vh;border-radius:8px">`;
+  overlay.onclick = () => document.body.removeChild(overlay);
+  document.body.appendChild(overlay);
+}
+
+// ========== MODAL ==========
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  if (id === 'order-modal' && !editingId) {
+    document.getElementById('o-date').value = new Date().toISOString().split('T')[0];
+  }
+  if (id === 'tx-modal' && !editingId) {
+    document.getElementById('tx-date').value = new Date().toISOString().split('T')[0];
+  }
+  if (id === 'kitchen-modal' && !editingId) {
+    document.getElementById('k-when').value = new Date().toISOString().split('T')[0];
+  }
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  editingId = null;
+  tempPhotos = {};
+  document.getElementById(id).querySelectorAll('.photo-grid').forEach(p => p.innerHTML = '');
+}
+
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+// ========== TOAST ==========
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ========== EXPORT / IMPORT ==========
+function exportData() {
+  const blob = new Blob([JSON.stringify(DATA, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'taste-of-baku-data.json';
+  a.click();
+  toast('Data exported ✓');
+}
+
+function importData() { document.getElementById('import-file').click(); }
+
+function handleImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      DATA = JSON.parse(ev.target.result);
+      save();
+      renderDashboard();
+      toast('Data imported ✓');
+    } catch { toast('Invalid JSON file'); }
+  };
+  reader.readAsText(file);
+}
+
+// ========== INIT ==========
+renderDashboard();
+</script>
+</body>
+</html>
